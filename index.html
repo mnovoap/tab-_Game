@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tabú</title>
+<meta name="description" content="Juego de Tabú para jugar en grupo desde el celular.">
+<meta name="theme-color" content="#ebe7ff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141033" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Tabú">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+/* ===================== COLORES (claro / oscuro) ===================== */
+:root{
+  --bg:#ebe7ff; --surface:#ffffff; --surface-2:#f4f2ff;
+  --ink:#1b1450; --muted:#5d5891; --line:#1b1450; --soft-line:#d5d0f5; --hard:#1b1450;
+  --accent:#ff2e63; --accent-ink:#ffffff;
+  --ok:#00a676; --pass:#f2a000; --bad:#ff2e63;
+  --primary:#1b1450; --primary-ink:#ffffff;
+  --overlay:rgba(27,20,80,.55);
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141033; --surface:#221b52; --surface-2:#2b2463;
+    --ink:#f1efff; --muted:#aaa4e2; --line:#6f66d9; --soft-line:#3a3275; --hard:#07051a;
+    --accent:#ff3d6e; --accent-ink:#ffffff;
+    --ok:#12b886; --pass:#f5a623; --bad:#ff3d6e;
+    --primary:#cdc8ff; --primary-ink:#141033;
+    --overlay:rgba(5,3,20,.7);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141033; --surface:#221b52; --surface-2:#2b2463;
+  --ink:#f1efff; --muted:#aaa4e2; --line:#6f66d9; --soft-line:#3a3275; --hard:#07051a;
+  --accent:#ff3d6e; --accent-ink:#ffffff;
+  --ok:#12b886; --pass:#f5a623; --bad:#ff3d6e;
+  --primary:#cdc8ff; --primary-ink:#141033;
+  --overlay:rgba(5,3,20,.7);
+  color-scheme:dark;
+}
+
+/* ===================== BASE ===================== */
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;background:var(--bg);scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{
+  margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:16px;line-height:1.45;
+  -webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;
+}
+main{height:100%}
+h1,h2,h3{margin:0;line-height:1.15}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.screen{max-width:560px;margin:0 auto;padding:18px 18px 32px;min-height:100%}
+.screen[hidden],[hidden]{display:none!important}
+.center{text-align:center}
+.muted{color:var(--muted)}
+.hint{color:var(--muted);font-size:.92rem;margin:8px 0}
+.stack{display:grid;gap:12px}
+.stack-sm{display:grid;gap:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.section-title{font-size:1.05rem;font-weight:800;margin:24px 0 10px}
+
+/* ===================== BOTONES ===================== */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;min-height:54px;padding:10px 16px;border-radius:16px;
+  border:2.5px solid var(--line);background:var(--surface);color:var(--ink);
+  font-weight:800;font-size:1.05rem;cursor:pointer;
+  box-shadow:0 4px 0 var(--hard);transition:transform .06s,box-shadow .06s;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;
+}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--hard)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.accent{background:var(--accent);color:var(--accent-ink);border-color:var(--hard)}
+.btn.primary{background:var(--primary);color:var(--primary-ink);border-color:var(--hard)}
+.btn.danger{background:var(--surface);color:var(--bad);border-color:var(--bad);box-shadow:0 4px 0 var(--bad)}
+.btn.small{min-height:44px;font-size:.95rem;border-radius:13px}
+.btn.big{min-height:62px;font-size:1.2rem}
+.btn.auto{width:auto}
+.badge{background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:1px 9px;font-size:.85rem}
+.icon-btn{
+  width:46px;height:46px;flex:none;border-radius:14px;border:2.5px solid var(--line);
+  background:var(--surface);color:var(--ink);font-weight:900;font-size:1.05rem;cursor:pointer;
+  box-shadow:0 3px 0 var(--hard);touch-action:manipulation;
+}
+.icon-btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--hard)}
+
+/* ===================== BARRA SUPERIOR ===================== */
+.topbar{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.topbar h2{font-size:1.45rem;font-weight:900;flex:1}
+.back{font-size:1.6rem;line-height:1}
+
+/* ===================== INICIO ===================== */
+.hero{display:flex;flex-direction:column;align-items:center;padding:28px 0 26px}
+.logo{
+  width:230px;background:var(--surface);border:3px solid var(--line);border-radius:22px;
+  box-shadow:8px 8px 0 var(--hard);transform:rotate(-4deg);overflow:hidden;
+}
+.logo-head{background:var(--accent);color:#fff;font-weight:900;font-size:3.2rem;letter-spacing:-.02em;text-align:center;padding:10px 0 12px;border-bottom:3px solid var(--line)}
+.logo ul{list-style:none;margin:0;padding:6px 0}
+.logo li{text-align:center;font-weight:700;font-size:1.05rem;padding:5px 0;color:var(--muted);text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:3px}
+.tagline{max-width:22em;text-align:center;font-size:1.08rem;margin:30px 0 0;font-weight:600}
+
+/* ===================== CONFIGURACIÓN ===================== */
+.panel{background:var(--surface);border:2.5px solid var(--line);border-radius:18px;padding:2px 14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1.5px solid var(--soft-line)}
+.row:last-child{border-bottom:0}
+.row small{display:block;color:var(--muted);font-weight:500}
+.stepper{display:flex;align-items:center;gap:6px;flex:none}
+.stepper .icon-btn{width:40px;height:40px;border-radius:12px;font-size:1.2rem}
+.stepper output{min-width:84px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
+.team-row{display:flex;align-items:center;gap:10px}
+.team-dot{width:16px;height:16px;border-radius:50%;flex:none;border:2px solid var(--hard);background:var(--c,#999)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:8px 14px;font-weight:700;font-size:.95rem;cursor:pointer;touch-action:manipulation}
+.chip.on{background:var(--primary);color:var(--primary-ink);border-color:var(--hard)}
+.chip span{opacity:.7;font-weight:600}
+.sticky-cta{position:sticky;bottom:0;padding:14px 0 6px;background:linear-gradient(transparent,var(--bg) 30%)}
+.switch{appearance:none;-webkit-appearance:none;width:54px;height:32px;border-radius:99px;background:var(--soft-line);border:2px solid var(--line);position:relative;cursor:pointer;flex:none;transition:background .15s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);border:2px solid var(--line);transition:transform .15s}
+.switch:checked{background:var(--ok)}
+.switch:checked::after{transform:translateX(22px)}
+
+/* ===================== FORMULARIOS ===================== */
+.input{
+  width:100%;min-height:50px;padding:10px 14px;border-radius:14px;border:2px solid var(--line);
+  background:var(--surface);color:var(--ink);font:inherit;font-size:16px;font-weight:600;
+}
+.input::placeholder{color:var(--muted);font-weight:500}
+select.input{appearance:auto}
+.field{display:grid;gap:6px;margin-bottom:16px}
+.field > span{font-weight:800}
+.field em{font-style:normal;font-weight:500}
+
+/* ===================== TURNO / MARCADOR ===================== */
+.ready-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:24px}
+.round-label{font-weight:800;color:var(--muted)}
+.team-big{font-size:clamp(2.2rem,10vw,3.2rem);font-weight:900;letter-spacing:-.02em;word-break:break-word}
+.scores{display:grid;gap:8px;width:100%}
+.score-row{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:2px solid var(--soft-line);border-radius:14px;text-align:left}
+.score-row.active{border-color:var(--line);box-shadow:0 3px 0 var(--hard)}
+.score-row .sname{flex:1;font-weight:700;word-break:break-word}
+.score-row .spts{font-weight:900;font-size:1.3rem;font-variant-numeric:tabular-nums}
+
+/* ===================== PANTALLA DE JUEGO ===================== */
+.play{display:flex;flex-direction:column;gap:12px;height:100%;padding-bottom:16px}
+.play-top{display:flex;align-items:center;gap:10px}
+.play-team{flex:1;display:flex;align-items:center;gap:8px;font-weight:800;min-width:0}
+.play-team span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timer{font-size:2.5rem;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.timer.low{color:var(--bad);animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.08)}}
+.bar{height:10px;border-radius:99px;background:var(--surface);border:2px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:100%;background:var(--ink);transition:width .2s linear}
+.bar.low i{background:var(--bad)}
+.turn-stats{display:flex;justify-content:center;gap:16px;font-weight:800;font-variant-numeric:tabular-nums}
+.turn-stats .ok{color:var(--ok)} .turn-stats .pass{color:var(--pass)} .turn-stats .bad{color:var(--bad)}
+.card-area{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:6px 6px 10px}
+.tcard{
+  width:100%;max-width:380px;background:var(--surface);border:3px solid var(--line);border-radius:24px;
+  box-shadow:7px 7px 0 var(--hard);overflow:hidden;
+}
+.tcard.enter{animation:enter .22s ease-out}
+@keyframes enter{from{transform:translateX(28px) rotate(2deg);opacity:0}to{transform:none;opacity:1}}
+.tcard-head{background:var(--accent);color:#fff;text-align:center;padding:12px 14px 18px;border-bottom:3px solid var(--line)}
+.tcard-cat{display:inline-block;font-size:.85rem;font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 10px;margin-bottom:6px}
+.tcard-word{font-size:clamp(2rem,9.5vw,2.9rem);font-weight:900;letter-spacing:-.02em;line-height:1.05;word-break:break-word;hyphens:auto}
+.tcard-list{list-style:none;margin:0;padding:4px 0}
+.tcard-list li{text-align:center;font-size:clamp(1.15rem,5.4vw,1.45rem);font-weight:700;padding:9px 12px;border-top:2px dashed var(--soft-line)}
+.tcard-list li:first-child{border-top:0}
+.tcard-label{text-align:center;font-size:.95rem;font-weight:800;color:var(--bad);padding:10px 12px 2px}
+.team-block{background:var(--surface);border:2.5px solid var(--line);border-radius:18px;padding:12px;display:grid;gap:10px}
+.players{display:flex;flex-wrap:wrap;gap:6px}
+.players:empty{display:none}
+.pchip{display:inline-flex;align-items:center;gap:2px;background:var(--surface-2);border:2px solid var(--soft-line);border-radius:99px;padding:3px 3px 3px 12px;font-weight:700}
+.pchip button{width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-weight:900;cursor:pointer}
+.add-player{display:flex;gap:8px}
+.add-player .btn{width:auto;flex:none;min-height:50px}
+.team-warn{color:var(--bad);font-size:.88rem;font-weight:700;margin:0}
+.roles{width:100%;background:var(--surface);border:2.5px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:2px;box-shadow:0 4px 0 var(--hard)}
+.roles .who{font-size:1.7rem;font-weight:900;word-break:break-word}
+.play-role{font-size:.85rem;color:var(--muted);font-weight:700}
+.actions{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:10px}
+.act{flex-direction:column;gap:0;min-height:92px;font-size:1rem;line-height:1.15;border-color:var(--hard)}
+.act .ico{font-size:1.7rem;line-height:1.1}
+.act small{font-weight:700;opacity:.85;font-size:.78rem;white-space:nowrap}
+.act.ok{background:var(--ok);color:#fff}
+.act.pass{background:var(--pass);color:#2a1b00}
+.act.bad{background:var(--bad);color:#fff}
+.flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:5}
+.flash.go{animation:flash .35s ease-out}
+@keyframes flash{from{opacity:.28}to{opacity:0}}
+
+/* ===================== FIN DE TURNO ===================== */
+.points-big{font-size:3.6rem;font-weight:900;text-align:center;font-variant-numeric:tabular-nums;margin:6px 0}
+.log{display:grid;gap:8px}
+.log-item{display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;border-radius:14px;border:2px solid var(--soft-line);background:var(--surface);cursor:pointer;text-align:left;touch-action:manipulation}
+.log-ico{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:900;flex:none}
+.log-word{flex:1;font-weight:700;word-break:break-word}
+.log-res{font-size:.85rem;font-weight:800}
+.log-item.ok .log-ico{background:var(--ok)} .log-item.ok .log-res{color:var(--ok)}
+.log-item.pass .log-ico{background:var(--pass)} .log-item.pass .log-res{color:var(--pass)}
+.log-item.bad .log-ico{background:var(--bad)} .log-item.bad .log-res{color:var(--bad)}
+
+/* ===================== LISTA DE TARJETAS ===================== */
+.filters{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.card-item{display:block;width:100%;text-align:left;background:var(--surface);border:2px solid var(--soft-line);border-radius:16px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.card-item:active{border-color:var(--line)}
+.ci-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.ci-top strong{font-size:1.1rem;word-break:break-word}
+.ci-cat{font-size:.8rem;font-weight:700;color:var(--muted);flex:none}
+.ci-forb{color:var(--muted);font-size:.92rem;margin-top:2px}
+.empty{text-align:center;padding:30px 10px;color:var(--muted)}
+
+/* ===================== AYUDA ===================== */
+.help p{margin:0 0 12px}
+.help h3{font-size:1.1rem;margin:20px 0 8px}
+
+/* ===================== MODALES Y AVISOS ===================== */
+.modal{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;padding:24px;z-index:40}
+.modal.top{z-index:60}
+.modal-box{background:var(--surface);border:3px solid var(--line);border-radius:22px;box-shadow:6px 6px 0 var(--hard);padding:22px;width:100%;max-width:380px;display:grid;gap:10px}
+.modal-box h3{font-size:1.4rem;font-weight:900;text-align:center}
+.modal-box p{margin:0 0 6px;text-align:center;font-weight:600}
+.toast{
+  position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  background:var(--primary);color:var(--primary-ink);padding:12px 18px;border-radius:14px;font-weight:700;
+  z-index:80;max-width:calc(100% - 32px);text-align:center;box-shadow:0 4px 0 var(--hard);
+}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media (max-height:640px){
+  .act{min-height:76px}
+  .tcard-list li{padding:6px 12px}
+  .timer{font-size:2.1rem}
+}
+</style>
+</head>
+<body>
+<main>
+
+<!-- ========== INICIO ========== -->
+<section id="home" class="screen">
+  <div class="hero">
+    <div class="logo" aria-hidden="true">
+      <div class="logo-head">Tabú</div>
+      <ul><li>palabra</li><li>prohibida</li><li>no la digas</li></ul>
+    </div>
+    <p class="tagline">Haz que tu equipo adivine la palabra sin decir ninguna de las prohibidas.</p>
+  </div>
+  <div class="stack">
+    <button class="btn accent big" data-action="goSetup">Jugar</button>
+    <button class="btn" data-action="goCards">Mis tarjetas <span class="badge" id="homeCount">0</span></button>
+    <button class="btn" data-action="goHelp">Cómo se juega</button>
+    <button class="btn primary" id="installBtn" data-action="install" hidden>Instalar en este celular</button>
+  </div>
+  <p class="hint center" id="installHint" hidden></p>
+</section>
+
+<!-- ========== CONFIGURAR PARTIDA ========== -->
+<section id="setup" class="screen" hidden>
+  <header class="topbar">
+    <button class="icon-btn back" data-action="goHome" aria-label="Volver">‹</button>
+    <h2>Nueva partida</h2>
+  </header>
+
+  <h3 class="section-title">Equipos y jugadores</h3>
+  <p class="hint">Escribe los nombres de los jugadores de cada equipo (mínimo 2). En cada turno uno describe y el resto adivina, y el papel va rotando.</p>
+  <div id="teams" class="stack"></div>
+  <div class="grid2" style="margin-top:12px">
+    <button class="btn small" id="addTeamBtn" data-action="addTeam">Añadir equipo</button>
+    <button class="btn small" data-action="shufflePlayers">Repartir al azar</button>
+  </div>
+
+  <h3 class="section-title">Reglas</h3>
+  <div class="panel">
+    <div class="row">
+      <div><strong>Tiempo por turno</strong></div>
+      <div class="stepper">
+        <button class="icon-btn" data-action="step" data-field="seconds" data-d="-15" aria-label="Menos tiempo">−</button>
+        <output id="v-seconds"></output>
+        <button class="icon-btn" data-action="step" data-field="seconds" data-d="15" aria-label="Más tiempo">+</button>
+      </div>
+    </div>
+    <div class="row">
+      <div><strong>Rondas</strong><small id="roundsHint">Turnos por equipo</small></div>
+      <div class="stepper">
+        <button class="icon-btn" data-action="step" data-field="rounds" data-d="-1" aria-label="Menos rondas">−</button>
+        <output id="v-rounds"></output>
+        <button class="icon-btn" data-action="step" data-field="rounds" data-d="1" aria-label="Más rondas">+</button>
+      </div>
+    </div>
+    <div class="row">
+      <div><strong>Pasadas</strong><small>Por turno</small></div>
+      <div class="stepper">
+        <button class="icon-btn" data-action="step" data-field="maxPass" data-d="-1" aria-label="Menos pasadas">−</button>
+        <output id="v-maxPass"></output>
+        <button class="icon-btn" data-action="step" data-field="maxPass" data-d="1" aria-label="Más pasadas">+</button>
+      </div>
+    </div>
+    <div class="row">
+      <div><strong>Penalización</strong><small>Por decir una prohibida</small></div>
+      <div class="stepper">
+        <button class="icon-btn" data-action="step" data-field="penalty" data-d="-1" aria-label="Menos penalización">−</button>
+        <output id="v-penalty"></output>
+        <button class="icon-btn" data-action="step" data-field="penalty" data-d="1" aria-label="Más penalización">+</button>
+      </div>
+    </div>
+    <label class="row">
+      <div><strong>Sonido</strong><small>En iPhone, se apaga con el modo silencio</small></div>
+      <input type="checkbox" class="switch" id="soundToggle">
+    </label>
+  </div>
+
+  <h3 class="section-title">Categorías <span class="muted" id="poolInfo" style="font-weight:600"></span></h3>
+  <div id="catChips" class="chips"></div>
+
+  <div class="sticky-cta"><button class="btn accent big" data-action="startGame">Empezar partida</button></div>
+</section>
+
+<!-- ========== ANTES DE CADA TURNO ========== -->
+<section id="ready" class="screen" hidden>
+  <div class="ready-wrap">
+    <p class="round-label" id="roundLabel"></p>
+    <p class="muted" style="margin:0">Le toca a</p>
+    <h1 class="team-big" id="readyTeam"></h1>
+    <div class="roles">
+      <span class="muted">Describe</span>
+      <span class="who" id="readyDescriber"></span>
+      <span class="muted" id="readyGuessers"></span>
+    </div>
+    <p class="muted" style="max-width:24em" id="readyTip"></p>
+    <button class="btn accent big" data-action="startTurn">Empezar turno</button>
+    <h3 class="section-title" style="align-self:flex-start">Marcador</h3>
+    <div id="readyScores" class="scores"></div>
+    <p class="hint" id="deckInfo"></p>
+    <button class="btn small" data-action="quitGame">Abandonar partida</button>
+  </div>
+</section>
+
+<!-- ========== JUGANDO ========== -->
+<section id="play" class="screen play" hidden>
+  <div class="play-top">
+    <div class="play-team"><span class="team-dot" id="playDot"></span><span><span id="playTeam"></span><br><span class="play-role" id="playRole"></span></span></div>
+    <div class="timer" id="timer">1:00</div>
+    <button class="icon-btn" data-action="pause" aria-label="Pausar">II</button>
+  </div>
+  <div class="bar" id="timerBarWrap"><i id="timerBar"></i></div>
+  <div class="turn-stats" id="turnStats"></div>
+  <div class="card-area"><div class="tcard" id="tcard"></div></div>
+  <div class="actions">
+    <button class="btn act bad" data-action="penalty"><span class="ico">✗</span>Tabú<small id="penLabel">−1</small></button>
+    <button class="btn act pass" data-action="pass" id="passBtn"><span class="ico">↷</span>Pasar<small id="passLabel">0</small></button>
+    <button class="btn act ok" data-action="correct"><span class="ico">✓</span>Acierto<small>+1</small></button>
+  </div>
+  <div class="flash" id="flash"></div>
+</section>
+
+<!-- ========== FIN DE TURNO ========== -->
+<section id="turnEnd" class="screen" hidden>
+  <p class="round-label center" id="teTitle" style="margin-top:16px"></p>
+  <h2 class="center team-big" id="teTeam" style="font-size:2rem"></h2>
+  <p class="center muted" id="teRole" style="margin:4px 0 0;font-weight:700"></p>
+  <div class="points-big" id="tePoints"></div>
+  <p class="hint center">¿Alguien se equivocó de botón? Toca una tarjeta para cambiar su resultado.</p>
+  <div id="teLog" class="log"></div>
+  <div class="sticky-cta"><button class="btn accent big" data-action="confirmTurn" id="teBtn">Sumar y continuar</button></div>
+</section>
+
+<!-- ========== FIN DE PARTIDA ========== -->
+<section id="final" class="screen" hidden>
+  <div class="ready-wrap">
+    <p class="round-label">Fin de la partida</p>
+    <h1 class="team-big" id="winner"></h1>
+    <p class="hint" id="finalNote"></p>
+    <div id="finalScores" class="scores"></div>
+    <div class="stack" style="width:100%;margin-top:10px">
+      <button class="btn accent big" data-action="rematch">Revancha</button>
+      <button class="btn" data-action="goHome">Ir al inicio</button>
+    </div>
+  </div>
+</section>
+
+<!-- ========== MIS TARJETAS ========== -->
+<section id="cards" class="screen" hidden>
+  <header class="topbar">
+    <button class="icon-btn back" data-action="goHome" aria-label="Volver">‹</button>
+    <h2>Mis tarjetas</h2>
+    <button class="btn primary small auto" data-action="newCard">Nueva</button>
+  </header>
+  <div class="filters">
+    <input type="search" class="input" id="search" placeholder="Buscar" autocomplete="off" aria-label="Buscar tarjetas">
+    <select class="input" id="catFilter" aria-label="Filtrar por categoría"></select>
+  </div>
+  <p class="hint" id="cardsCount"></p>
+  <div id="cardList"></div>
+
+  <h3 class="section-title">Compartir y copia de seguridad</h3>
+  <div class="grid2">
+    <button class="btn small" data-action="exportCards">Exportar</button>
+    <button class="btn small" data-action="importCards">Importar</button>
+  </div>
+  <p class="hint">Exportar crea un archivo .json con tus tarjetas (o solo las de la categoría filtrada). Envíalo a tus amigos y ellos lo importan.</p>
+  <button class="btn small" data-action="restoreExamples">Recuperar tarjetas de ejemplo</button>
+  <input type="file" id="importFile" hidden>
+</section>
+
+<!-- ========== EDITAR TARJETA ========== -->
+<section id="edit" class="screen" hidden>
+  <header class="topbar">
+    <button class="icon-btn back" data-action="goCards" aria-label="Volver">‹</button>
+    <h2 id="editTitle">Nueva tarjeta</h2>
+  </header>
+  <label class="field"><span>Palabra a adivinar</span>
+    <input class="input" id="fWord" maxlength="60" autocomplete="off" placeholder="Ej.: Volcán">
+  </label>
+  <label class="field"><span>Categoría</span>
+    <input class="input" id="fCat" list="catList" maxlength="30" autocomplete="off" placeholder="Ej.: Naturaleza">
+  </label>
+  <datalist id="catList"></datalist>
+  <div class="field"><span>Palabras prohibidas <em class="muted">(se recomiendan 4 o 5)</em></span>
+    <div class="stack-sm" id="fForb">
+      <input class="input forb" maxlength="40" autocomplete="off" placeholder="Prohibida 1">
+      <input class="input forb" maxlength="40" autocomplete="off" placeholder="Prohibida 2">
+      <input class="input forb" maxlength="40" autocomplete="off" placeholder="Prohibida 3">
+      <input class="input forb" maxlength="40" autocomplete="off" placeholder="Prohibida 4">
+      <input class="input forb" maxlength="40" autocomplete="off" placeholder="Prohibida 5 (opcional)">
+    </div>
+  </div>
+  <div class="stack">
+    <button class="btn accent big" data-action="saveCard">Guardar tarjeta</button>
+    <button class="btn danger" data-action="deleteCard" id="deleteBtn">Eliminar tarjeta</button>
+  </div>
+</section>
+
+<!-- ========== CÓMO SE JUEGA ========== -->
+<section id="help" class="screen help" hidden>
+  <header class="topbar">
+    <button class="icon-btn back" data-action="goHome" aria-label="Volver">‹</button>
+    <h2>Cómo se juega</h2>
+  </header>
+  <p>Se juega en equipos de 2 o más personas. En cada turno, una persona describe la palabra de la tarjeta y el resto de su equipo intenta adivinarla antes de que se acabe el tiempo. La app indica quién describe y rota el papel en cada turno del equipo.</p>
+  <h3>Lo que no se puede hacer</h3>
+  <p>Decir la palabra, cualquiera de las palabras prohibidas o una parte de ellas (si la palabra es “pan”, tampoco vale “panadería”). Tampoco se permiten gestos, sonidos, deletrear ni traducir a otro idioma.</p>
+  <h3>Los botones</h3>
+  <p><strong>Acierto</strong> suma 1 punto. <strong>Pasar</strong> salta la tarjeta sin sumar ni restar (por defecto, máximo 2 veces por turno). <strong>Tabú</strong> se pulsa cuando alguien dice una palabra prohibida y resta puntos (por defecto, 2). Ambas reglas se pueden cambiar al crear la partida.</p>
+  <h3>Al terminar el turno</h3>
+  <p>Verás la lista de tarjetas jugadas. Si alguien pulsó el botón equivocado, toca la tarjeta para corregirla antes de sumar los puntos. Gana el equipo con más puntos al acabar todas las rondas.</p>
+  <h3>Consejo</h3>
+  <p>Las tarjetas salen al azar y no se repiten en la misma partida. Si se acaban, la partida termina. Exporta tus tarjetas de vez en cuando para tener una copia de seguridad.</p>
+</section>
+
+</main>
+
+<!-- Pausa -->
+<div class="modal" id="pauseModal" hidden>
+  <div class="modal-box">
+    <h3>Pausa</h3>
+    <p id="pauseTime"></p>
+    <button class="btn accent big" data-action="resume">Continuar</button>
+    <button class="btn" data-action="endTurnNow">Terminar el turno ahora</button>
+    <button class="btn danger" data-action="quitGame">Abandonar partida</button>
+  </div>
+</div>
+
+<!-- Diálogo de confirmación -->
+<div class="modal top" id="dialog" hidden role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <p id="dialogMsg"></p>
+    <div class="stack-sm" id="dialogBtns"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+'use strict';
+
+/* ==========================================================
+   1. TARJETAS DE EJEMPLO (puedes editarlas aquí o en la app)
+   ========================================================== */
+const EXAMPLES = [
+  {word:'Playa',       category:'Lugares',     forbidden:['arena','mar','sol','vacaciones','olas']},
+  {word:'Hospital',    category:'Lugares',     forbidden:['médico','enfermo','enfermera','ambulancia','cama']},
+  {word:'Biblioteca',  category:'Lugares',     forbidden:['libros','leer','silencio','préstamo','estantería']},
+  {word:'Aeropuerto',  category:'Lugares',     forbidden:['avión','vuelo','maleta','pasaporte','despegar']},
+  {word:'Pizza',       category:'Comida',      forbidden:['queso','Italia','masa','horno','rebanada']},
+  {word:'Chocolate',   category:'Comida',      forbidden:['cacao','dulce','marrón','tableta','postre']},
+  {word:'Tacos',       category:'Comida',      forbidden:['México','tortilla','carne','salsa','picante']},
+  {word:'Paella',      category:'Comida',      forbidden:['arroz','Valencia','mariscos','España','sartén']},
+  {word:'Elefante',    category:'Animales',    forbidden:['trompa','grande','gris','colmillos','África']},
+  {word:'Pingüino',    category:'Animales',    forbidden:['hielo','frío','ave','polo','nadar']},
+  {word:'Jirafa',      category:'Animales',    forbidden:['cuello','alta','manchas','sabana','hojas']},
+  {word:'Murciélago',  category:'Animales',    forbidden:['noche','vampiro','cueva','volar','alas']},
+  {word:'Paraguas',    category:'Objetos',     forbidden:['lluvia','mojarse','abrir','agua','sombrilla']},
+  {word:'Reloj',       category:'Objetos',     forbidden:['hora','tiempo','muñeca','agujas','alarma']},
+  {word:'Espejo',      category:'Objetos',     forbidden:['reflejo','cara','vidrio','mirar','baño']},
+  {word:'Bombero',     category:'Profesiones', forbidden:['fuego','incendio','camión','manguera','rescatar']},
+  {word:'Astronauta',  category:'Profesiones', forbidden:['espacio','luna','cohete','NASA','nave']},
+  {word:'Fútbol',      category:'Deportes',    forbidden:['balón','gol','portería','equipo','Mundial']},
+  {word:'Natación',    category:'Deportes',    forbidden:['piscina','agua','nadar','traje de baño','brazada']},
+  {word:'Cumpleaños',  category:'Celebraciones', forbidden:['pastel','velas','regalo','fiesta','años']},
+];
+
+// Palabras paisas (Antioquia, Colombia)
+const EXAMPLES_PAISA = [
+  {word:'Finca',         category:'Paisa', forbidden:['campo','casa','vacas','fin de semana','campestre']},
+  {word:'Paseo',         category:'Paisa', forbidden:['viaje','familia','olla','río','salir']},
+  {word:'Arepa',         category:'Paisa', forbidden:['maíz','redonda','desayuno','queso','harina']},
+  {word:'Bandeja paisa', category:'Paisa', forbidden:['frijoles','chicharrón','arroz','huevo','plato']},
+  {word:'Parcero',       category:'Paisa', forbidden:['amigo','parce','compañero','socio','man']},
+  {word:'Carriel',       category:'Paisa', forbidden:['bolso','cuero','arriero','hombro','Antioquia']},
+  {word:'Chiva',         category:'Paisa', forbidden:['bus','colores','escalera','rumba','pueblo']},
+  {word:'Guaro',         category:'Paisa', forbidden:['aguardiente','anís','trago','botella','rumba']},
+  {word:'Feria de las Flores', category:'Paisa', forbidden:['Medellín','silleteros','agosto','desfile','flores']},
+  {word:'Tinto',         category:'Paisa', forbidden:['café','taza','negro','mañana','azúcar']},
+  {word:'Mazamorra',     category:'Paisa', forbidden:['maíz','leche','panela','bebida','blanca']},
+  {word:'Guatapé',       category:'Paisa', forbidden:['piedra','Peñol','represa','zócalos','pueblo']},
+  {word:'Sancocho',      category:'Paisa', forbidden:['sopa','olla','plátano','yuca','gallina']},
+  {word:'Natilla',       category:'Paisa', forbidden:['diciembre','Navidad','buñuelos','maicena','postre']},
+  {word:'Aguapanela',    category:'Paisa', forbidden:['panela','agua','caliente','limón','dulce']},
+  {word:'Guayabo',       category:'Paisa', forbidden:['resaca','tomar','dolor','cabeza','trago']},
+  {word:'Mecato',        category:'Paisa', forbidden:['paquetes','golosinas','comer','dulces','antojo']},
+  {word:'Chiviado',      category:'Paisa', forbidden:['falso','pirata','copia','original','imitación']},
+  {word:'Pecueca',       category:'Paisa', forbidden:['pies','olor','medias','zapatos','hongos']},
+  {word:'Berraco',       category:'Paisa', forbidden:['valiente','enojado','verraco','fuerte','berraquera']},
+];
+EXAMPLES.push(...EXAMPLES_PAISA);
+
+const KEYS = {cards:'tabu.cards.v1', settings:'tabu.settings.v2', examples:'tabu.examples.version'};
+const EXAMPLES_VERSION = 2;
+const TEAM_COLORS = ['#ff2e63','#2f6fdb','#00a676','#f2a000','#8b4fd1','#e2621c'];
+const TEAM_NAMES  = ['Equipo Rojo','Equipo Azul','Equipo Verde','Equipo Amarillo','Equipo Morado','Equipo Naranja'];
+const LIMITS = {seconds:[15,300], rounds:[1,20], maxPass:[0,10], penalty:[0,3]};
+
+/* ==========================================================
+   2. UTILIDADES
+   ========================================================== */
+const $ = (sel, el = document) => el.querySelector(sel);
+const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const norm = s => String(s).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const keyOf = c => norm(c.word) + '|' + norm(c.category);
+const fmtTime = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+const plural = (n, one, many) => n === 1 ? one : many;
+
+function shuffle(arr){            // Fisher–Yates: orden aleatorio justo
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Guardado en el dispositivo (localStorage) */
+const store = {
+  get(k, fallback){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch(e){ return fallback; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
+};
+
+/* Limpia y valida una tarjeta (al cargar o importar) */
+function sanitizeCard(c, keepId){
+  if (!c || typeof c.word !== 'string') return null;
+  const word = c.word.trim().slice(0, 60);
+  if (!word) return null;
+  const forbidden = Array.isArray(c.forbidden)
+    ? [...new Set(c.forbidden.filter(f => typeof f === 'string').map(f => f.trim().slice(0, 40)).filter(Boolean))].slice(0, 5)
+    : [];
+  if (!forbidden.length) return null;
+  const category = (typeof c.category === 'string' && c.category.trim()) ? c.category.trim().slice(0, 30) : 'General';
+  return {id: (keepId && c.id) ? String(c.id) : uid(), word, category, forbidden};
+}
+
+/* ==========================================================
+   3. ESTADO
+   ========================================================== */
+let cards = store.get(KEYS.cards, null);
+if (!Array.isArray(cards)){
+  cards = EXAMPLES.map(c => sanitizeCard(c));
+  store.set(KEYS.cards, cards);
+} else {
+  cards = cards.map(c => sanitizeCard(c, true)).filter(Boolean);
+  // Si ya usabas la app, añade una sola vez las tarjetas paisas nuevas
+  if ((store.get(KEYS.examples, 1) || 1) < 2){
+    const have = new Set(cards.map(keyOf));
+    cards = cards.concat(EXAMPLES_PAISA.filter(c => !have.has(keyOf(c))).map(c => sanitizeCard(c)));
+    store.set(KEYS.cards, cards);
+  }
+}
+store.set(KEYS.examples, EXAMPLES_VERSION);
+
+const DEFAULTS = {
+  teams:[{name:'Equipo Rojo', players:[]}, {name:'Equipo Azul', players:[]}],
+  seconds:60, rounds:3, maxPass:2, penalty:2, sound:true, excludedCats:[]
+};
+let settings = Object.assign({}, DEFAULTS, store.get(KEYS.settings, {}));
+if (!Array.isArray(settings.teams) || settings.teams.length < 2) settings.teams = JSON.parse(JSON.stringify(DEFAULTS.teams));
+settings.teams = settings.teams.map((t, i) => typeof t === 'string'
+  ? {name:t, players:[]}
+  : {name: String((t && t.name) || TEAM_NAMES[i] || ('Equipo ' + (i + 1))), players: Array.isArray(t && t.players) ? t.players.map(String) : []});
+if (!Array.isArray(settings.excludedCats)) settings.excludedCats = [];
+
+let game = null;          // partida en curso
+let current = 'home';     // pantalla visible
+let editingId = null;     // tarjeta que se está editando
+let filterCat = '';       // filtro de la lista
+let search = '';
+
+function saveCards(){ if (!store.set(KEYS.cards, cards)) toast('No se pudo guardar. Revisa el espacio del dispositivo.'); }
+function saveSettings(){ store.set(KEYS.settings, settings); }
+
+function categoryCounts(){
+  const m = new Map();
+  cards.forEach(c => m.set(c.category, (m.get(c.category) || 0) + 1));
+  return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], 'es'));
+}
+
+/* ==========================================================
+   4. NAVEGACIÓN ENTRE PANTALLAS
+   ========================================================== */
+function show(id){
+  $$('.screen').forEach(s => s.hidden = (s.id !== id));
+  current = id;
+  window.scrollTo(0, 0);
+  if (id !== 'home') ensureGuard();
+}
+
+/* Botón "atrás" de Android: navega dentro de la app en vez de cerrarla */
+let guard = false;
+function ensureGuard(){ if (!guard){ try { history.pushState({tabu:1}, ''); guard = true; } catch(e){} } }
+window.addEventListener('popstate', () => {
+  guard = false;
+  if (!$('#dialog').hidden) { ensureGuard(); return; }
+  switch (current){
+    case 'play':    actions.pause(); break;
+    case 'edit':    actions.goCards(); break;
+    case 'ready':
+    case 'turnEnd': actions.quitGame(); break;
+    case 'home':    break;
+    default:        actions.goHome();
+  }
+  if (current !== 'home') ensureGuard();
+});
+
+/* ==========================================================
+   5. AVISOS Y DIÁLOGOS
+   ========================================================== */
+let toastTimer = null;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.hidden = true, 2600);
+}
+
+function ask(message, buttons){
+  return new Promise(resolve => {
+    const box = $('#dialogBtns');
+    $('#dialogMsg').textContent = message;
+    box.innerHTML = '';
+    buttons.forEach(b => {
+      const el = document.createElement('button');
+      el.className = 'btn ' + (b.style || '');
+      el.textContent = b.label;
+      el.addEventListener('click', () => { $('#dialog').hidden = true; resolve(b.value); });
+      box.appendChild(el);
+    });
+    $('#dialog').hidden = false;
+  });
+}
+
+/* ==========================================================
+   6. SONIDO, VIBRACIÓN Y PANTALLA ENCENDIDA
+   ========================================================== */
+let actx = null;
+function unlockAudio(){
+  if (!settings.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume();
+  } catch(e){}
+}
+function beep(freq = 880, dur = 0.12, type = 'sine', vol = 0.25){
+  if (!settings.sound || !actx) return;
+  try {
+    const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(actx.destination);
+    o.start(t); o.stop(t + dur);
+  } catch(e){}
+}
+const vibrate = p => { try { if (navigator.vibrate) navigator.vibrate(p); } catch(e){} };
+
+let wakeLock = null;
+async function keepAwake(){ try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e){} }
+function releaseAwake(){ try { if (wakeLock) wakeLock.release(); } catch(e){} wakeLock = null; }
+
+/* ==========================================================
+   7. TEMPORIZADOR
+   ========================================================== */
+const timer = {endAt:0, remaining:0, running:false, interval:null, lastSec:null};
+
+function startTimer(sec){ timer.remaining = sec * 1000; timer.lastSec = null; resumeTimer(); }
+function resumeTimer(){
+  timer.endAt = Date.now() + timer.remaining;
+  timer.running = true;
+  clearInterval(timer.interval);
+  timer.interval = setInterval(tick, 200);
+  tick();
+}
+function pauseTimer(){
+  if (!timer.running) return;
+  timer.remaining = Math.max(0, timer.endAt - Date.now());
+  timer.running = false;
+  clearInterval(timer.interval);
+}
+function stopTimer(){ timer.running = false; clearInterval(timer.interval); }
+
+function tick(){
+  if (!timer.running || !game) return;
+  const ms = Math.max(0, timer.endAt - Date.now());
+  const s = Math.ceil(ms / 1000);
+  const low = s <= 10;
+  $('#timer').textContent = fmtTime(s);
+  $('#timer').classList.toggle('low', low);
+  $('#timerBarWrap').classList.toggle('low', low);
+  $('#timerBar').style.width = (ms / (game.seconds * 1000) * 100) + '%';
+  if (s !== timer.lastSec){
+    if (s <= 5 && s > 0){ beep(1000, 0.08); vibrate(40); }
+    timer.lastSec = s;
+  }
+  if (ms <= 0){ stopTimer(); finishTurn(); }
+}
+
+/* ==========================================================
+   8. LÓGICA DEL JUEGO
+   ========================================================== */
+function startGame(){
+  const pool = cards.filter(c => !settings.excludedCats.includes(c.category));
+  if (!pool.length){ toast('Elige al menos una categoría con tarjetas.'); return; }
+  const short = settings.teams.find(t => t.players.length < 2);
+  if (short){
+    if (current !== 'setup') actions.goSetup();
+    toast(`${short.name.trim() || 'Un equipo'} necesita al menos 2 jugadores.`);
+    return;
+  }
+  game = {
+    teams: settings.teams.map((t, i) => ({
+      name: t.name.trim() || ('Equipo ' + (i + 1)), players: t.players.slice(), turnNo: 0,
+      score: 0, color: TEAM_COLORS[i % TEAM_COLORS.length]})),
+    seconds: settings.seconds, rounds: settings.rounds, maxPass: settings.maxPass, penalty: settings.penalty,
+    deck: shuffle(pool),   // se sacan del final; nunca se repiten
+    round: 1, teamIdx: 0, log: [], passes: 0, current: null, outOfCards: false
+  };
+  showReady();
+}
+
+/* Quién describe: rota en cada turno del equipo (jugador 1, 2, 3… y vuelve a empezar) */
+function roles(t){
+  const d = t.turnNo % t.players.length;
+  return {describer: t.players[d], guessers: t.players.filter((_, i) => i !== d)};
+}
+const listES = arr => arr.length <= 1 ? (arr[0] || '') : arr.slice(0, -1).join(', ') + ' y ' + arr[arr.length - 1];
+
+function showReady(){
+  const t = game.teams[game.teamIdx];
+  $('#roundLabel').textContent = `Ronda ${game.round} de ${game.rounds}`;
+  $('#readyTeam').textContent = t.name;
+  $('#readyTeam').style.color = t.color;
+  const r = roles(t);
+  $('#readyDescriber').textContent = r.describer;
+  $('#readyGuessers').textContent = (r.guessers.length === 1 ? 'Adivina: ' : 'Adivinan: ') + listES(r.guessers);
+  $('#readyTip').textContent = `Pasa el celular a ${r.describer}. Alguien del otro equipo vigila la pantalla y pulsa “Tabú” si escucha una palabra prohibida.`;
+  $('#readyScores').innerHTML = scoresHTML(game.teams, false, game.teamIdx);
+  const n = game.deck.length;
+  $('#deckInfo').textContent = `${n} ${plural(n, 'tarjeta disponible', 'tarjetas disponibles')} en el mazo`;
+  show('ready');
+}
+
+function scoresHTML(teams, medals, activeIdx){
+  const scoresSorted = teams.map(t => t.score);
+  return teams.map((t, i) => {
+    const rank = scoresSorted.filter(s => s > t.score).length;   // empates comparten puesto
+    const medal = medals ? (['🥇 ','🥈 ','🥉 '][rank] || '') : '';
+    return `<div class="score-row${i === activeIdx ? ' active' : ''}">
+      <span class="team-dot" style="--c:${t.color}"></span>
+      <span class="sname">${medal}${esc(t.name)}</span>
+      <span class="spts">${t.score}</span></div>`;
+  }).join('');
+}
+
+function startTurn(){
+  unlockAudio();
+  keepAwake();
+  game.log = []; game.passes = 0;
+  const t = game.teams[game.teamIdx];
+  $('#playTeam').textContent = t.name;
+  $('#playRole').textContent = 'Describe: ' + roles(t).describer;
+  $('#playDot').style.setProperty('--c', t.color);
+  $('#penLabel').textContent = game.penalty ? ('−' + game.penalty) : '0';
+  show('play');
+  startTimer(game.seconds);
+  nextCard();
+}
+
+function nextCard(){
+  const c = game.deck.pop();
+  if (!c){ game.current = null; game.outOfCards = true; stopTimer(); finishTurn(); return; }
+  game.current = c;
+  const el = $('#tcard');
+  el.innerHTML = `<div class="tcard-head"><span class="tcard-cat">${esc(c.category)}</span>
+    <div class="tcard-word">${esc(c.word)}</div></div>
+    <div class="tcard-label">No puedes decir:</div>
+    <ul class="tcard-list">${c.forbidden.map(f => `<li>${esc(f)}</li>`).join('')}</ul>`;
+  el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter');
+  renderTurnStats();
+}
+
+function turnPoints(){
+  return game.log.reduce((s, l) => s + (l.res === 'ok' ? 1 : l.res === 'bad' ? -game.penalty : 0), 0);
+}
+
+function renderTurnStats(){
+  const count = r => game.log.filter(l => l.res === r).length;
+  $('#turnStats').innerHTML =
+    `<span class="ok">✓ ${count('ok')}</span><span class="pass">↷ ${count('pass')}</span><span class="bad">✗ ${count('bad')}</span>`;
+  const left = game.maxPass - game.passes;
+  $('#passLabel').textContent = game.maxPass ? `quedan ${left}` : 'sin límite';
+  $('#passBtn').disabled = !!game.maxPass && left <= 0;
+}
+
+function flash(color){
+  const f = $('#flash');
+  f.style.background = color;
+  f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+}
+
+function mark(res){
+  if (!game || !game.current || !timer.running) return;
+  if (res === 'pass'){
+    if (game.maxPass && game.passes >= game.maxPass){ toast('Ya no quedan pasadas en este turno.'); return; }
+    game.passes++;
+  }
+  game.log.push({word: game.current.word, res});
+  if (res === 'ok'){ beep(880, 0.12); beep(1320, 0.15); vibrate(30); flash('var(--ok)'); }
+  if (res === 'pass'){ beep(440, 0.1); vibrate(20); flash('var(--pass)'); }
+  if (res === 'bad'){ beep(150, 0.4, 'square', 0.18); vibrate([80, 50, 80]); flash('var(--bad)'); }
+  nextCard();
+}
+
+function finishTurn(){
+  stopTimer();
+  releaseAwake();
+  $('#pauseModal').hidden = true;
+  // La tarjeta que estaba en pantalla no se jugó: vuelve al fondo del mazo
+  if (game.current){ game.deck.unshift(game.current); game.current = null; }
+  if (!game.outOfCards){ beep(330, 0.6, 'triangle', 0.3); vibrate([200, 80, 200]); }
+  renderTurnEnd();
+  show('turnEnd');
+}
+
+function isLastTurn(){
+  return game.outOfCards || (game.teamIdx === game.teams.length - 1 && game.round >= game.rounds);
+}
+
+const RES = {
+  ok:   {icon:'✓', label:'Acierto', cls:'ok'},
+  pass: {icon:'↷', label:'Pasada',  cls:'pass'},
+  bad:  {icon:'✗', label:'Tabú',    cls:'bad'}
+};
+
+function renderTurnEnd(){
+  const t = game.teams[game.teamIdx];
+  const pts = turnPoints();
+  $('#teTitle').textContent = game.outOfCards ? 'Se acabaron las tarjetas' : '¡Tiempo!';
+  $('#teTeam').textContent = t.name;
+  $('#teTeam').style.color = t.color;
+  $('#teRole').textContent = 'Describió ' + roles(t).describer;
+  $('#tePoints').textContent = `${pts > 0 ? '+' : ''}${pts} ${plural(Math.abs(pts), 'punto', 'puntos')}`;
+  $('#teLog').innerHTML = game.log.length
+    ? game.log.map((l, i) => `<button class="log-item ${RES[l.res].cls}" data-action="cycleLog" data-i="${i}">
+        <span class="log-ico">${RES[l.res].icon}</span><span class="log-word">${esc(l.word)}</span>
+        <span class="log-res">${RES[l.res].label}</span></button>`).join('')
+    : '<p class="empty">No se jugó ninguna tarjeta en este turno.</p>';
+  $('#teBtn').textContent = isLastTurn() ? 'Sumar y ver resultados' : 'Sumar y continuar';
+}
+
+function confirmTurn(){
+  game.teams[game.teamIdx].score += turnPoints();
+  game.teams[game.teamIdx].turnNo++;
+  game.log = [];
+  if (isLastTurn()){ showFinal(); return; }
+  game.teamIdx++;
+  if (game.teamIdx >= game.teams.length){ game.teamIdx = 0; game.round++; }
+  showReady();
+}
+
+function showFinal(){
+  const sorted = [...game.teams].sort((a, b) => b.score - a.score);
+  const top = sorted[0].score;
+  const winners = sorted.filter(t => t.score === top);
+  const w = $('#winner');
+  if (winners.length > 1){ w.textContent = '¡Empate!'; w.style.color = ''; }
+  else { w.textContent = '¡Gana ' + winners[0].name + '!'; w.style.color = winners[0].color; }
+  $('#finalNote').textContent = game.outOfCards ? 'La partida terminó porque se acabaron las tarjetas.' : '';
+  $('#finalScores').innerHTML = scoresHTML(sorted, true, -1);
+  show('final');
+  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.18, 'triangle'), i * 140));
+}
+
+/* Pausa automática si se sale de la app o se bloquea la pantalla */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && current === 'play' && timer.running) actions.pause();
+});
+
+/* ==========================================================
+   9. PANTALLAS: INICIO Y CONFIGURACIÓN
+   ========================================================== */
+const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+function renderHome(){
+  $('#homeCount').textContent = cards.length;
+  const hint = $('#installHint');
+  if (!isStandalone()){
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    hint.textContent = ios
+      ? 'Para instalarla en tu iPhone: botón Compartir y luego “Añadir a pantalla de inicio”.'
+      : 'Para instalarla: menú ⋮ del navegador y luego “Instalar app” o “Añadir a pantalla de inicio”.';
+    hint.hidden = false;
+  } else hint.hidden = true;
+}
+
+function renderSetup(){
+  $('#teams').innerHTML = settings.teams.map((t, i) => `
+    <div class="team-block">
+      <div class="team-row">
+        <span class="team-dot" style="--c:${TEAM_COLORS[i % TEAM_COLORS.length]}"></span>
+        <input class="input" value="${esc(t.name)}" data-team="${i}" maxlength="24" aria-label="Nombre del equipo ${i + 1}">
+        ${settings.teams.length > 2 ? `<button class="icon-btn" data-action="removeTeam" data-i="${i}" aria-label="Quitar equipo">✕</button>` : ''}
+      </div>
+      <div class="players">${t.players.map((p, j) =>
+        `<span class="pchip">${esc(p)}<button data-action="removePlayer" data-t="${i}" data-p="${j}" aria-label="Quitar a ${esc(p)}">✕</button></span>`).join('')}</div>
+      ${t.players.length < 2 ? `<p class="team-warn">${t.players.length ? 'Falta 1 jugador' : 'Faltan 2 jugadores'}</p>` : ''}
+      <div class="add-player">
+        <input class="input" data-newplayer="${i}" maxlength="20" placeholder="Nombre del jugador" autocomplete="off" enterkeyhint="done" aria-label="Nuevo jugador para ${esc(t.name)}">
+        <button class="btn small primary" data-action="addPlayer" data-t="${i}">Añadir</button>
+      </div>
+    </div>`).join('');
+  $('#addTeamBtn').hidden = settings.teams.length >= 6;
+  const maxP = Math.max(...settings.teams.map(t => t.players.length));
+  $('#roundsHint').textContent = maxP >= 2 ? `Con ${maxP} rondas, todos describen al menos una vez` : 'Turnos por equipo';
+
+  $('#v-seconds').textContent = fmtTime(settings.seconds);
+  $('#v-rounds').textContent = settings.rounds;
+  $('#v-maxPass').textContent = settings.maxPass ? settings.maxPass : 'Sin límite';
+  $('#v-penalty').textContent = settings.penalty ? ('−' + settings.penalty + ' ' + plural(settings.penalty, 'punto', 'puntos')) : 'No resta';
+  $('#soundToggle').checked = !!settings.sound;
+
+  const cats = categoryCounts();
+  $('#catChips').innerHTML = cats.length
+    ? cats.map(([cat, n]) => {
+        const on = !settings.excludedCats.includes(cat);
+        return `<button class="chip${on ? ' on' : ''}" data-action="toggleCat" data-cat="${esc(cat)}" aria-pressed="${on}">${esc(cat)} <span>${n}</span></button>`;
+      }).join('')
+    : '<p class="hint">Todavía no tienes tarjetas. Créalas en “Mis tarjetas”.</p>';
+  const pool = cards.filter(c => !settings.excludedCats.includes(c.category)).length;
+  $('#poolInfo').textContent = `(${pool} ${plural(pool, 'tarjeta', 'tarjetas')})`;
+}
+
+/* ==========================================================
+   10. PANTALLAS: MIS TARJETAS Y EDITOR
+   ========================================================== */
+function renderCards(){
+  const cats = categoryCounts();
+  if (filterCat && !cats.some(([c]) => c === filterCat)) filterCat = '';
+  $('#catFilter').innerHTML = `<option value="">Todas (${cards.length})</option>` +
+    cats.map(([c, n]) => `<option value="${esc(c)}"${c === filterCat ? ' selected' : ''}>${esc(c)} (${n})</option>`).join('');
+
+  const q = norm(search);
+  const list = cards
+    .filter(c => (!filterCat || c.category === filterCat) &&
+                 (!q || norm(c.word).includes(q) || c.forbidden.some(f => norm(f).includes(q))))
+    .sort((a, b) => a.word.localeCompare(b.word, 'es'));
+
+  $('#cardsCount').textContent = `${list.length} ${plural(list.length, 'tarjeta', 'tarjetas')}`;
+  $('#cardList').innerHTML = list.length
+    ? list.map(c => `<button class="card-item" data-action="editCard" data-id="${esc(c.id)}">
+        <div class="ci-top"><strong>${esc(c.word)}</strong><span class="ci-cat">${esc(c.category)}</span></div>
+        <div class="ci-forb">${c.forbidden.map(esc).join(', ')}</div></button>`).join('')
+    : `<div class="empty">${cards.length ? 'Ninguna tarjeta coincide con la búsqueda.' : 'No tienes tarjetas. Toca “Nueva” para crear la primera.'}</div>`;
+}
+
+function openEditor(id){
+  editingId = id || null;
+  const c = id ? cards.find(x => x.id === id) : null;
+  $('#editTitle').textContent = c ? 'Editar tarjeta' : 'Nueva tarjeta';
+  $('#fWord').value = c ? c.word : '';
+  $('#fCat').value = c ? c.category : (filterCat || '');
+  $$('.forb').forEach((inp, i) => inp.value = c ? (c.forbidden[i] || '') : '');
+  $('#catList').innerHTML = categoryCounts().map(([cat]) => `<option value="${esc(cat)}"></option>`).join('');
+  $('#deleteBtn').hidden = !c;
+  show('edit');
+  if (!c) setTimeout(() => $('#fWord').focus(), 50);
+}
+
+async function saveCard(){
+  const word = $('#fWord').value.trim();
+  if (!word){ toast('Escribe la palabra a adivinar.'); $('#fWord').focus(); return; }
+  const forbidden = [...new Set($$('.forb').map(i => i.value.trim()).filter(Boolean))];
+  if (!forbidden.length){ toast('Añade al menos una palabra prohibida.'); $$('.forb')[0].focus(); return; }
+  const category = $('#fCat').value.trim() || 'General';
+  const candidate = {word, category};
+  const dup = cards.find(c => c.id !== editingId && keyOf(c) === keyOf(candidate));
+  if (dup){
+    const ok = await ask(`Ya tienes una tarjeta “${dup.word}” en ${dup.category}. ¿Guardarla de todos modos?`,
+      [{label:'Guardar igualmente', value:true, style:'accent'}, {label:'Cancelar', value:false}]);
+    if (!ok) return;
+  }
+  if (editingId){
+    const c = cards.find(x => x.id === editingId);
+    Object.assign(c, {word, category, forbidden});
+  } else {
+    cards.push({id: uid(), word, category, forbidden});
+  }
+  saveCards();
+  toast('Tarjeta guardada');
+  actions.goCards();
+}
+
+async function deleteCard(){
+  const c = cards.find(x => x.id === editingId);
+  if (!c) return;
+  const ok = await ask(`¿Eliminar la tarjeta “${c.word}”?`,
+    [{label:'Eliminar', value:true, style:'danger'}, {label:'Cancelar', value:false}]);
+  if (!ok) return;
+  cards = cards.filter(x => x.id !== editingId);
+  saveCards();
+  toast('Tarjeta eliminada');
+  actions.goCards();
+}
+
+/* ---------- Exportar / importar ---------- */
+async function exportCards(){
+  const list = filterCat ? cards.filter(c => c.category === filterCat) : cards;
+  if (!list.length){ toast('No hay tarjetas para exportar.'); return; }
+  const data = {app:'tabu', version:1, exported:new Date().toISOString(),
+                cards: list.map(({word, category, forbidden}) => ({word, category, forbidden}))};
+  const json = JSON.stringify(data, null, 2);
+  const slug = filterCat ? '-' + norm(filterCat).replace(/[^a-z0-9]+/g, '-') : '';
+  const name = `tabu-tarjetas${slug}-${new Date().toISOString().slice(0, 10)}.json`;
+  let file = null;
+  try { file = new File([json], name, {type:'application/json'}); } catch(e){}
+
+  // En el celular: menú de compartir (WhatsApp, correo, Archivos…)
+  if (file && navigator.canShare && navigator.canShare({files:[file]})){
+    try { await navigator.share({files:[file], title:'Tarjetas de Tabú'}); return; }
+    catch(e){ if (e && e.name === 'AbortError') return; }
+  }
+  // En la computadora (o si no se puede compartir): descarga el archivo
+  const blob = file || new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  toast(`Exportadas ${list.length} ${plural(list.length, 'tarjeta', 'tarjetas')}`);
+}
+
+async function importText(text){
+  let data;
+  try { data = JSON.parse(text); } catch(e){ toast('El archivo no es un .json de tarjetas válido.'); return; }
+  const arr = Array.isArray(data) ? data : (data && Array.isArray(data.cards) ? data.cards : null);
+  if (!arr){ toast('El archivo no contiene tarjetas.'); return; }
+  const incoming = arr.map(c => sanitizeCard(c)).filter(Boolean);
+  if (!incoming.length){ toast('No se encontraron tarjetas válidas en el archivo.'); return; }
+
+  const n = incoming.length;
+  const choice = await ask(`El archivo tiene ${n} ${plural(n, 'tarjeta', 'tarjetas')}. ¿Qué quieres hacer?`, [
+    {label:'Añadirlas a las mías', value:'merge', style:'accent'},
+    {label:'Reemplazar todas mis tarjetas', value:'replace', style:'danger'},
+    {label:'Cancelar', value:null}
+  ]);
+  if (!choice) return;
+  if (choice === 'replace'){
+    cards = incoming;
+    toast(`Ahora tienes ${n} ${plural(n, 'tarjeta', 'tarjetas')}`);
+  } else {
+    const existing = new Set(cards.map(keyOf));
+    const added = incoming.filter(c => !existing.has(keyOf(c)) && existing.add(keyOf(c)));
+    cards = cards.concat(added);
+    const skipped = n - added.length;
+    toast(`Añadidas ${added.length}` + (skipped ? ` (${skipped} ya las tenías)` : ''));
+  }
+  saveCards();
+  renderCards();
+}
+
+$('#importFile').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try { importText(await f.text()); } catch(err){ toast('No se pudo leer el archivo.'); }
+});
+
+/* ==========================================================
+   11. ACCIONES DE LOS BOTONES
+   ========================================================== */
+function addPlayer(ti){
+  const inp = $(`[data-newplayer="${ti}"]`);
+  const name = inp.value.trim();
+  if (!name){ inp.focus(); return; }
+  const taken = settings.teams.find(t => t.players.some(p => norm(p) === norm(name)));
+  if (taken){ toast(`${name} ya está en ${taken.name}.`); return; }
+  settings.teams[ti].players.push(name);
+  saveSettings(); renderSetup();
+  const again = $(`[data-newplayer="${ti}"]`);
+  if (again) again.focus();
+}
+document.addEventListener('keydown', e => {
+  const t = e.target;
+  if (e.key === 'Enter' && t.dataset && t.dataset.newplayer !== undefined){ e.preventDefault(); addPlayer(+t.dataset.newplayer); }
+});
+
+const actions = {
+  goHome(){ renderHome(); show('home'); },
+  goSetup(){ renderSetup(); show('setup'); },
+  goCards(){ renderCards(); show('cards'); },
+  goHelp(){ show('help'); },
+
+  addTeam(){
+    if (settings.teams.length >= 6) return;
+    const name = TEAM_NAMES.find(n => !settings.teams.some(t => t.name === n)) || ('Equipo ' + (settings.teams.length + 1));
+    settings.teams.push({name, players:[]}); saveSettings(); renderSetup();
+  },
+  removeTeam(b){
+    if (settings.teams.length <= 2) return;
+    const [gone] = settings.teams.splice(+b.dataset.i, 1);
+    gone.players.forEach((p, k) => settings.teams[k % settings.teams.length].players.push(p));
+    saveSettings(); renderSetup();
+    if (gone.players.length) toast('Sus jugadores pasaron a los otros equipos');
+  },
+  addPlayer(b){ addPlayer(+b.dataset.t); },
+  removePlayer(b){
+    settings.teams[+b.dataset.t].players.splice(+b.dataset.p, 1);
+    saveSettings(); renderSetup();
+  },
+  shufflePlayers(){
+    const all = shuffle(settings.teams.flatMap(t => t.players));
+    if (all.length < 2){ toast('Primero escribe los nombres de los jugadores.'); return; }
+    settings.teams.forEach(t => t.players = []);
+    all.forEach((p, i) => settings.teams[i % settings.teams.length].players.push(p));
+    saveSettings(); renderSetup();
+    toast('Jugadores repartidos al azar');
+  },
+  step(b){
+    const f = b.dataset.field, [lo, hi] = LIMITS[f];
+    settings[f] = Math.min(hi, Math.max(lo, settings[f] + Number(b.dataset.d)));
+    saveSettings(); renderSetup();
+  },
+  toggleCat(b){
+    const cat = b.dataset.cat;
+    const i = settings.excludedCats.indexOf(cat);
+    if (i >= 0) settings.excludedCats.splice(i, 1); else settings.excludedCats.push(cat);
+    saveSettings(); renderSetup();
+  },
+
+  startGame, startTurn, confirmTurn,
+  rematch(){ startGame(); },
+  correct(){ mark('ok'); },
+  pass(){ mark('pass'); },
+  penalty(){ mark('bad'); },
+  pause(){
+    if (!timer.running) return;
+    pauseTimer(); releaseAwake();
+    $('#pauseTime').textContent = 'Quedan ' + fmtTime(Math.ceil(timer.remaining / 1000));
+    $('#pauseModal').hidden = false;
+  },
+  resume(){ $('#pauseModal').hidden = true; unlockAudio(); keepAwake(); resumeTimer(); },
+  endTurnNow(){ finishTurn(); },
+  cycleLog(b){
+    const l = game.log[+b.dataset.i];
+    l.res = l.res === 'ok' ? 'pass' : l.res === 'pass' ? 'bad' : 'ok';
+    renderTurnEnd();
+  },
+  async quitGame(){
+    const ok = await ask('¿Abandonar la partida? Se perderá el marcador.',
+      [{label:'Abandonar', value:true, style:'danger'}, {label:'Seguir jugando', value:false}]);
+    if (!ok) return;
+    stopTimer(); releaseAwake();
+    $('#pauseModal').hidden = true;
+    game = null;
+    actions.goHome();
+  },
+
+  newCard(){ openEditor(null); },
+  editCard(b){ openEditor(b.dataset.id); },
+  saveCard, deleteCard, exportCards,
+  importCards(){ $('#importFile').click(); },
+  async restoreExamples(){
+    const existing = new Set(cards.map(keyOf));
+    const missing = EXAMPLES.filter(c => !existing.has(keyOf(c))).map(c => sanitizeCard(c));
+    if (!missing.length){ toast('Ya tienes todas las tarjetas de ejemplo.'); return; }
+    cards = cards.concat(missing); saveCards(); renderCards();
+    toast(`Recuperadas ${missing.length} ${plural(missing.length, 'tarjeta', 'tarjetas')}`);
+  },
+
+  async install(){
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try { await deferredPrompt.userChoice; } catch(e){}
+    deferredPrompt = null; $('#installBtn').hidden = true;
+  }
+};
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-action]');
+  if (!b || b.disabled) return;
+  const fn = actions[b.dataset.action];
+  if (fn) fn(b, e);
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset && t.dataset.team !== undefined){ settings.teams[+t.dataset.team].name = t.value; saveSettings(); }
+  else if (t.id === 'search'){ search = t.value; renderCards(); }
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'catFilter'){ filterCat = e.target.value; renderCards(); }
+  else if (e.target.id === 'soundToggle'){ settings.sound = e.target.checked; saveSettings(); if (settings.sound){ unlockAudio(); beep(880, 0.1); } }
+});
+
+/* ==========================================================
+   12. INSTALACIÓN COMO APP (PWA) Y MODO SIN CONEXIÓN
+   ========================================================== */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {    // Android / Chrome
+  e.preventDefault(); deferredPrompt = e; $('#installBtn').hidden = false;
+});
+window.addEventListener('appinstalled', () => { $('#installBtn').hidden = true; renderHome(); });
+
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+// Pide al navegador que no borre los datos guardados
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch(e){}
+
+renderHome();
+</script>
+</body>
+</html>
