@@ -1,7 +1,7 @@
 /* Service worker: permite que la app funcione sin internet.
    IMPORTANTE: cada vez que cambies algún archivo, sube el número de versión
    (tabu-v1 → tabu-v2) para que los celulares descarguen la versión nueva. */
-const CACHE = 'tabu-v2';
+const CACHE = 'tabu-v3';
 const ASSETS = [
   './',
   './index.html',

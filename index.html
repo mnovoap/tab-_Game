@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Tabú</title>
 <meta name="description" content="Juego de Tabú para jugar en grupo desde el celular.">
-<meta name="theme-color" content="#ebe7ff" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#141033" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffd447" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1838" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15,14 +15,16 @@
 <link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
-/* ===================== COLORES (claro / oscuro) ===================== */
+/* ===================== COLORES: estilo chiva (claro / oscuro) ===================== */
 :root{
-  --bg:#ebe7ff; --surface:#ffffff; --surface-2:#f4f2ff;
-  --ink:#1b1450; --muted:#5d5891; --line:#1b1450; --soft-line:#d5d0f5; --hard:#1b1450;
-  --accent:#ff2e63; --accent-ink:#ffffff;
-  --ok:#00a676; --pass:#f2a000; --bad:#ff2e63;
-  --primary:#1b1450; --primary-ink:#ffffff;
-  --overlay:rgba(27,20,80,.55);
+  --bg:#ffd447; --surface:#ffffff; --surface-2:#fff7d9;
+  --ink:#0d1b4c; --muted:#3f4a7a; --line:#0d1b4c; --soft-line:#eadb9f; --hard:#0d1b4c;
+  --head-bg:#0d1b4c; --head-word:#ffd447;
+  --red:#e8283a; --blue:#1f5fd6; --green:#13965a; --yellow:#ffd447;
+  --accent:#e8283a; --accent-ink:#ffffff;
+  --ok:#13965a; --pass:#1f5fd6; --bad:#e8283a;
+  --primary:#0d1b4c; --primary-ink:#ffffff;
+  --overlay:rgba(13,27,76,.6);
   color-scheme:light;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
@@ -30,22 +32,22 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#141033; --surface:#221b52; --surface-2:#2b2463;
-    --ink:#f1efff; --muted:#aaa4e2; --line:#6f66d9; --soft-line:#3a3275; --hard:#07051a;
-    --accent:#ff3d6e; --accent-ink:#ffffff;
-    --ok:#12b886; --pass:#f5a623; --bad:#ff3d6e;
-    --primary:#cdc8ff; --primary-ink:#141033;
-    --overlay:rgba(5,3,20,.7);
+    --bg:#0e1838; --surface:#18275c; --surface-2:#213270;
+    --ink:#fff7dc; --muted:#b9c0e6; --line:#ffd447; --soft-line:#2f4084; --hard:#050b20;
+    --head-bg:#0a1330; --head-word:#ffd447;
+    --accent:#ff4457; --ok:#22b36d; --pass:#4c86ff; --bad:#ff4457;
+    --primary:#ffd447; --primary-ink:#0e1838;
+    --overlay:rgba(3,6,20,.72);
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#141033; --surface:#221b52; --surface-2:#2b2463;
-  --ink:#f1efff; --muted:#aaa4e2; --line:#6f66d9; --soft-line:#3a3275; --hard:#07051a;
-  --accent:#ff3d6e; --accent-ink:#ffffff;
-  --ok:#12b886; --pass:#f5a623; --bad:#ff3d6e;
-  --primary:#cdc8ff; --primary-ink:#141033;
-  --overlay:rgba(5,3,20,.7);
+  --bg:#0e1838; --surface:#18275c; --surface-2:#213270;
+  --ink:#fff7dc; --muted:#b9c0e6; --line:#ffd447; --soft-line:#2f4084; --hard:#050b20;
+  --head-bg:#0a1330; --head-word:#ffd447;
+  --accent:#ff4457; --ok:#22b36d; --pass:#4c86ff; --bad:#ff4457;
+  --primary:#ffd447; --primary-ink:#0e1838;
+  --overlay:rgba(3,6,20,.72);
   color-scheme:dark;
 }
 
@@ -71,6 +73,16 @@ button{font:inherit;color:inherit}
 .stack-sm{display:grid;gap:8px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .section-title{font-size:1.05rem;font-weight:800;margin:24px 0 10px}
+
+/* ----- El sello de la app: franjas de chiva y flecos ----- */
+.stripes{
+  height:22px;
+  background:linear-gradient(var(--red) 0 25%, var(--yellow) 25% 50%, var(--blue) 50% 75%, var(--green) 75% 100%);
+}
+.fringe{
+  height:11px;margin-bottom:-11px;position:relative;
+  background:radial-gradient(circle at 9px 0, var(--green) 8px, transparent 8.5px) 0 0/18px 11px repeat-x;
+}
 
 /* ===================== BOTONES ===================== */
 .btn{
@@ -103,15 +115,18 @@ button{font:inherit;color:inherit}
 .back{font-size:1.6rem;line-height:1}
 
 /* ===================== INICIO ===================== */
-.hero{display:flex;flex-direction:column;align-items:center;padding:28px 0 26px}
+.hero{display:flex;flex-direction:column;align-items:center;padding:26px 0 24px}
 .logo{
-  width:230px;background:var(--surface);border:3px solid var(--line);border-radius:22px;
-  box-shadow:8px 8px 0 var(--hard);transform:rotate(-4deg);overflow:hidden;
+  width:250px;background:var(--surface);border:3px solid var(--line);border-radius:22px;
+  box-shadow:0 8px 0 var(--hard);overflow:hidden;
 }
-.logo-head{background:var(--accent);color:#fff;font-weight:900;font-size:3.2rem;letter-spacing:-.02em;text-align:center;padding:10px 0 12px;border-bottom:3px solid var(--line)}
-.logo ul{list-style:none;margin:0;padding:6px 0}
-.logo li{text-align:center;font-weight:700;font-size:1.05rem;padding:5px 0;color:var(--muted);text-decoration:line-through;text-decoration-color:var(--accent);text-decoration-thickness:3px}
-.tagline{max-width:22em;text-align:center;font-size:1.08rem;margin:30px 0 0;font-weight:600}
+.logo-head{
+  background:var(--head-bg);color:var(--head-word);font-weight:900;font-size:3.6rem;letter-spacing:-.03em;
+  text-align:center;padding:14px 0 10px;line-height:1;
+}
+.logo ul{list-style:none;margin:0;padding:14px 0 8px}
+.logo li{text-align:center;font-weight:700;font-size:1.05rem;padding:4px 0;color:var(--muted);text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:3px}
+.tagline{max-width:22em;text-align:center;font-size:1.1rem;margin:28px 0 0;font-weight:700}
 
 /* ===================== CONFIGURACIÓN ===================== */
 .panel{background:var(--surface);border:2.5px solid var(--line);border-radius:18px;padding:2px 14px}
@@ -132,6 +147,14 @@ button{font:inherit;color:inherit}
 .switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);border:2px solid var(--line);transition:transform .15s}
 .switch:checked{background:var(--ok)}
 .switch:checked::after{transform:translateX(22px)}
+.team-block{background:var(--surface);border:2.5px solid var(--line);border-radius:18px;padding:12px;display:grid;gap:10px}
+.players{display:flex;flex-wrap:wrap;gap:6px}
+.players:empty{display:none}
+.pchip{display:inline-flex;align-items:center;gap:2px;background:var(--surface-2);border:2px solid var(--soft-line);border-radius:99px;padding:3px 3px 3px 12px;font-weight:700}
+.pchip button{width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-weight:900;cursor:pointer}
+.add-player{display:flex;gap:8px}
+.add-player .btn{width:auto;flex:none;min-height:50px}
+.team-warn{color:var(--bad);font-size:.88rem;font-weight:700;margin:0}
 
 /* ===================== FORMULARIOS ===================== */
 .input{
@@ -147,12 +170,19 @@ select.input{appearance:auto}
 /* ===================== TURNO / MARCADOR ===================== */
 .ready-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding-top:24px}
 .round-label{font-weight:800;color:var(--muted)}
-.team-big{font-size:clamp(2.2rem,10vw,3.2rem);font-weight:900;letter-spacing:-.02em;word-break:break-word}
+.team-big{
+  font-size:clamp(2.2rem,10vw,3.2rem);font-weight:900;letter-spacing:-.02em;word-break:break-word;
+  text-decoration:underline;text-decoration-color:var(--c,transparent);text-decoration-thickness:.14em;text-underline-offset:.16em;
+}
 .scores{display:grid;gap:8px;width:100%}
 .score-row{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:2px solid var(--soft-line);border-radius:14px;text-align:left}
 .score-row.active{border-color:var(--line);box-shadow:0 3px 0 var(--hard)}
 .score-row .sname{flex:1;font-weight:700;word-break:break-word}
 .score-row .spts{font-weight:900;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.roles{width:100%;background:var(--surface);border:2.5px solid var(--line);border-radius:18px;padding:0 0 14px;display:grid;gap:2px;box-shadow:0 4px 0 var(--hard);overflow:hidden}
+.roles .stripes{height:12px;margin-bottom:10px}
+.roles .who{font-size:1.7rem;font-weight:900;word-break:break-word}
+.play-role{font-size:.85rem;color:var(--muted);font-weight:700}
 
 /* ===================== PANTALLA DE JUEGO ===================== */
 .play{display:flex;flex-direction:column;gap:12px;height:100%;padding-bottom:16px}
@@ -162,42 +192,31 @@ select.input{appearance:auto}
 .timer{font-size:2.5rem;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
 .timer.low{color:var(--bad);animation:pulse 1s infinite}
 @keyframes pulse{50%{transform:scale(1.08)}}
-.bar{height:10px;border-radius:99px;background:var(--surface);border:2px solid var(--line);overflow:hidden}
+.bar{height:12px;border-radius:99px;background:var(--surface);border:2px solid var(--line);overflow:hidden}
 .bar i{display:block;height:100%;width:100%;background:var(--ink);transition:width .2s linear}
 .bar.low i{background:var(--bad)}
 .turn-stats{display:flex;justify-content:center;gap:16px;font-weight:800;font-variant-numeric:tabular-nums}
 .turn-stats .ok{color:var(--ok)} .turn-stats .pass{color:var(--pass)} .turn-stats .bad{color:var(--bad)}
 .card-area{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:6px 6px 10px}
 .tcard{
-  width:100%;max-width:380px;background:var(--surface);border:3px solid var(--line);border-radius:24px;
-  box-shadow:7px 7px 0 var(--hard);overflow:hidden;
+  width:100%;max-width:380px;background:var(--surface);border:3px solid var(--line);border-radius:22px;
+  box-shadow:0 8px 0 var(--hard);overflow:hidden;
 }
 .tcard.enter{animation:enter .22s ease-out}
 @keyframes enter{from{transform:translateX(28px) rotate(2deg);opacity:0}to{transform:none;opacity:1}}
-.tcard-head{background:var(--accent);color:#fff;text-align:center;padding:12px 14px 18px;border-bottom:3px solid var(--line)}
-.tcard-cat{display:inline-block;font-size:.85rem;font-weight:700;background:rgba(255,255,255,.22);border-radius:99px;padding:2px 10px;margin-bottom:6px}
-.tcard-word{font-size:clamp(2rem,9.5vw,2.9rem);font-weight:900;letter-spacing:-.02em;line-height:1.05;word-break:break-word;hyphens:auto}
-.tcard-list{list-style:none;margin:0;padding:4px 0}
-.tcard-list li{text-align:center;font-size:clamp(1.15rem,5.4vw,1.45rem);font-weight:700;padding:9px 12px;border-top:2px dashed var(--soft-line)}
+.tcard-head{background:var(--head-bg);color:#fff;text-align:center;padding:12px 14px 14px}
+.tcard-cat{display:inline-block;font-size:.85rem;font-weight:700;background:rgba(255,255,255,.16);color:#fff;border-radius:99px;padding:2px 10px;margin-bottom:6px}
+.tcard-word{font-size:clamp(2rem,9.5vw,2.9rem);font-weight:900;letter-spacing:-.02em;line-height:1.05;word-break:break-word;hyphens:auto;color:var(--head-word)}
+.tcard-label{text-align:center;font-size:.95rem;font-weight:800;color:var(--bad);padding:16px 12px 2px}
+.tcard-list{list-style:none;margin:0;padding:2px 0 6px}
+.tcard-list li{text-align:center;font-size:clamp(1.15rem,5.4vw,1.45rem);font-weight:700;padding:8px 12px;border-top:2px dashed var(--soft-line)}
 .tcard-list li:first-child{border-top:0}
-.tcard-label{text-align:center;font-size:.95rem;font-weight:800;color:var(--bad);padding:10px 12px 2px}
-.team-block{background:var(--surface);border:2.5px solid var(--line);border-radius:18px;padding:12px;display:grid;gap:10px}
-.players{display:flex;flex-wrap:wrap;gap:6px}
-.players:empty{display:none}
-.pchip{display:inline-flex;align-items:center;gap:2px;background:var(--surface-2);border:2px solid var(--soft-line);border-radius:99px;padding:3px 3px 3px 12px;font-weight:700}
-.pchip button{width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-weight:900;cursor:pointer}
-.add-player{display:flex;gap:8px}
-.add-player .btn{width:auto;flex:none;min-height:50px}
-.team-warn{color:var(--bad);font-size:.88rem;font-weight:700;margin:0}
-.roles{width:100%;background:var(--surface);border:2.5px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:2px;box-shadow:0 4px 0 var(--hard)}
-.roles .who{font-size:1.7rem;font-weight:900;word-break:break-word}
-.play-role{font-size:.85rem;color:var(--muted);font-weight:700}
 .actions{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:10px}
 .act{flex-direction:column;gap:0;min-height:92px;font-size:1rem;line-height:1.15;border-color:var(--hard)}
 .act .ico{font-size:1.7rem;line-height:1.1}
-.act small{font-weight:700;opacity:.85;font-size:.78rem;white-space:nowrap}
+.act small{font-weight:700;opacity:.9;font-size:.78rem;white-space:nowrap}
 .act.ok{background:var(--ok);color:#fff}
-.act.pass{background:var(--pass);color:#2a1b00}
+.act.pass{background:var(--pass);color:#fff}
 .act.bad{background:var(--bad);color:#fff}
 .flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:5}
 .flash.go{animation:flash .35s ease-out}
@@ -231,7 +250,7 @@ select.input{appearance:auto}
 /* ===================== MODALES Y AVISOS ===================== */
 .modal{position:fixed;inset:0;background:var(--overlay);display:flex;align-items:center;justify-content:center;padding:24px;z-index:40}
 .modal.top{z-index:60}
-.modal-box{background:var(--surface);border:3px solid var(--line);border-radius:22px;box-shadow:6px 6px 0 var(--hard);padding:22px;width:100%;max-width:380px;display:grid;gap:10px}
+.modal-box{background:var(--surface);border:3px solid var(--line);border-radius:22px;box-shadow:0 7px 0 var(--hard);padding:22px;width:100%;max-width:380px;display:grid;gap:10px}
 .modal-box h3{font-size:1.4rem;font-weight:900;text-align:center}
 .modal-box p{margin:0 0 6px;text-align:center;font-weight:600}
 .toast{
@@ -258,9 +277,10 @@ select.input{appearance:auto}
   <div class="hero">
     <div class="logo" aria-hidden="true">
       <div class="logo-head">Tabú</div>
+      <div class="stripes"></div><div class="fringe"></div>
       <ul><li>palabra</li><li>prohibida</li><li>no la digas</li></ul>
     </div>
-    <p class="tagline">Haz que tu equipo adivine la palabra sin decir ninguna de las prohibidas.</p>
+    <p class="tagline">Haz que tu equipo adivine la palabra sin decir ninguna de las prohibidas. 100 tarjetas para empezar.</p>
   </div>
   <div class="stack">
     <button class="btn accent big" data-action="goSetup">Jugar</button>
@@ -339,6 +359,7 @@ select.input{appearance:auto}
     <p class="muted" style="margin:0">Le toca a</p>
     <h1 class="team-big" id="readyTeam"></h1>
     <div class="roles">
+      <div class="stripes" aria-hidden="true"></div>
       <span class="muted">Describe</span>
       <span class="who" id="readyDescriber"></span>
       <span class="muted" id="readyGuessers"></span>
@@ -493,58 +514,135 @@ select.input{appearance:auto}
 /* ==========================================================
    1. TARJETAS DE EJEMPLO (puedes editarlas aquí o en la app)
    ========================================================== */
-const EXAMPLES = [
-  {word:'Playa',       category:'Lugares',     forbidden:['arena','mar','sol','vacaciones','olas']},
-  {word:'Hospital',    category:'Lugares',     forbidden:['médico','enfermo','enfermera','ambulancia','cama']},
-  {word:'Biblioteca',  category:'Lugares',     forbidden:['libros','leer','silencio','préstamo','estantería']},
-  {word:'Aeropuerto',  category:'Lugares',     forbidden:['avión','vuelo','maleta','pasaporte','despegar']},
-  {word:'Pizza',       category:'Comida',      forbidden:['queso','Italia','masa','horno','rebanada']},
-  {word:'Chocolate',   category:'Comida',      forbidden:['cacao','dulce','marrón','tableta','postre']},
-  {word:'Tacos',       category:'Comida',      forbidden:['México','tortilla','carne','salsa','picante']},
-  {word:'Paella',      category:'Comida',      forbidden:['arroz','Valencia','mariscos','España','sartén']},
-  {word:'Elefante',    category:'Animales',    forbidden:['trompa','grande','gris','colmillos','África']},
-  {word:'Pingüino',    category:'Animales',    forbidden:['hielo','frío','ave','polo','nadar']},
-  {word:'Jirafa',      category:'Animales',    forbidden:['cuello','alta','manchas','sabana','hojas']},
-  {word:'Murciélago',  category:'Animales',    forbidden:['noche','vampiro','cueva','volar','alas']},
-  {word:'Paraguas',    category:'Objetos',     forbidden:['lluvia','mojarse','abrir','agua','sombrilla']},
-  {word:'Reloj',       category:'Objetos',     forbidden:['hora','tiempo','muñeca','agujas','alarma']},
-  {word:'Espejo',      category:'Objetos',     forbidden:['reflejo','cara','vidrio','mirar','baño']},
-  {word:'Bombero',     category:'Profesiones', forbidden:['fuego','incendio','camión','manguera','rescatar']},
-  {word:'Astronauta',  category:'Profesiones', forbidden:['espacio','luna','cohete','NASA','nave']},
-  {word:'Fútbol',      category:'Deportes',    forbidden:['balón','gol','portería','equipo','Mundial']},
-  {word:'Natación',    category:'Deportes',    forbidden:['piscina','agua','nadar','traje de baño','brazada']},
-  {word:'Cumpleaños',  category:'Celebraciones', forbidden:['pastel','velas','regalo','fiesta','años']},
+const C = (word, category, forbidden) => ({word, category, forbidden});
+
+// Paquete 1: las 20 tarjetas originales
+const PACK_BASE = [
+  C('Playa','Lugares',['arena','mar','sol','vacaciones','olas']),
+  C('Hospital','Lugares',['médico','enfermo','enfermera','ambulancia','cama']),
+  C('Biblioteca','Lugares',['libros','leer','silencio','préstamo','estantería']),
+  C('Aeropuerto','Lugares',['avión','vuelo','maleta','pasaporte','despegar']),
+  C('Pizza','Comida',['queso','Italia','masa','horno','rebanada']),
+  C('Chocolate','Comida',['cacao','dulce','marrón','tableta','postre']),
+  C('Tacos','Comida',['México','tortilla','carne','salsa','picante']),
+  C('Paella','Comida',['arroz','Valencia','mariscos','España','sartén']),
+  C('Elefante','Animales',['trompa','grande','gris','colmillos','África']),
+  C('Pingüino','Animales',['hielo','frío','ave','polo','nadar']),
+  C('Jirafa','Animales',['cuello','alta','manchas','sabana','hojas']),
+  C('Murciélago','Animales',['noche','vampiro','cueva','volar','alas']),
+  C('Paraguas','Objetos',['lluvia','mojarse','abrir','agua','sombrilla']),
+  C('Reloj','Objetos',['hora','tiempo','muñeca','agujas','alarma']),
+  C('Espejo','Objetos',['reflejo','cara','vidrio','mirar','baño']),
+  C('Bombero','Profesiones',['fuego','incendio','camión','manguera','rescatar']),
+  C('Astronauta','Profesiones',['espacio','luna','cohete','NASA','nave']),
+  C('Fútbol','Deportes',['balón','gol','portería','equipo','Mundial']),
+  C('Natación','Deportes',['piscina','agua','nadar','traje de baño','brazada']),
+  C('Cumpleaños','Celebraciones',['pastel','velas','regalo','fiesta','años']),
 ];
 
-// Palabras paisas (Antioquia, Colombia)
-const EXAMPLES_PAISA = [
-  {word:'Finca',         category:'Paisa', forbidden:['campo','casa','vacas','fin de semana','campestre']},
-  {word:'Paseo',         category:'Paisa', forbidden:['viaje','familia','olla','río','salir']},
-  {word:'Arepa',         category:'Paisa', forbidden:['maíz','redonda','desayuno','queso','harina']},
-  {word:'Bandeja paisa', category:'Paisa', forbidden:['frijoles','chicharrón','arroz','huevo','plato']},
-  {word:'Parcero',       category:'Paisa', forbidden:['amigo','parce','compañero','socio','man']},
-  {word:'Carriel',       category:'Paisa', forbidden:['bolso','cuero','arriero','hombro','Antioquia']},
-  {word:'Chiva',         category:'Paisa', forbidden:['bus','colores','escalera','rumba','pueblo']},
-  {word:'Guaro',         category:'Paisa', forbidden:['aguardiente','anís','trago','botella','rumba']},
-  {word:'Feria de las Flores', category:'Paisa', forbidden:['Medellín','silleteros','agosto','desfile','flores']},
-  {word:'Tinto',         category:'Paisa', forbidden:['café','taza','negro','mañana','azúcar']},
-  {word:'Mazamorra',     category:'Paisa', forbidden:['maíz','leche','panela','bebida','blanca']},
-  {word:'Guatapé',       category:'Paisa', forbidden:['piedra','Peñol','represa','zócalos','pueblo']},
-  {word:'Sancocho',      category:'Paisa', forbidden:['sopa','olla','plátano','yuca','gallina']},
-  {word:'Natilla',       category:'Paisa', forbidden:['diciembre','Navidad','buñuelos','maicena','postre']},
-  {word:'Aguapanela',    category:'Paisa', forbidden:['panela','agua','caliente','limón','dulce']},
-  {word:'Guayabo',       category:'Paisa', forbidden:['resaca','tomar','dolor','cabeza','trago']},
-  {word:'Mecato',        category:'Paisa', forbidden:['paquetes','golosinas','comer','dulces','antojo']},
-  {word:'Chiviado',      category:'Paisa', forbidden:['falso','pirata','copia','original','imitación']},
-  {word:'Pecueca',       category:'Paisa', forbidden:['pies','olor','medias','zapatos','hongos']},
-  {word:'Berraco',       category:'Paisa', forbidden:['valiente','enojado','verraco','fuerte','berraquera']},
+// Paquete 2: palabras paisas (Antioquia)
+const PACK_PAISA = [
+  C('Finca','Paisa',['campo','casa','vacas','fin de semana','campestre']),
+  C('Paseo','Paisa',['viaje','familia','olla','río','salir']),
+  C('Arepa','Paisa',['maíz','redonda','desayuno','queso','harina']),
+  C('Bandeja paisa','Paisa',['frijoles','chicharrón','arroz','huevo','plato']),
+  C('Parcero','Paisa',['amigo','parce','compañero','socio','man']),
+  C('Carriel','Paisa',['bolso','cuero','arriero','hombro','Antioquia']),
+  C('Chiva','Paisa',['bus','colores','escalera','rumba','pueblo']),
+  C('Guaro','Paisa',['aguardiente','anís','trago','botella','rumba']),
+  C('Feria de las Flores','Paisa',['Medellín','silleteros','agosto','desfile','flores']),
+  C('Tinto','Paisa',['café','taza','negro','mañana','azúcar']),
+  C('Mazamorra','Paisa',['maíz','leche','panela','bebida','blanca']),
+  C('Guatapé','Paisa',['piedra','Peñol','represa','zócalos','pueblo']),
+  C('Sancocho','Paisa',['sopa','olla','plátano','yuca','gallina']),
+  C('Natilla','Paisa',['diciembre','Navidad','buñuelos','maicena','postre']),
+  C('Aguapanela','Paisa',['panela','agua','caliente','limón','dulce']),
+  C('Guayabo','Paisa',['resaca','tomar','dolor','cabeza','trago']),
+  C('Mecato','Paisa',['paquetes','golosinas','comer','dulces','antojo']),
+  C('Chiviado','Paisa',['falso','pirata','copia','original','imitación']),
+  C('Pecueca','Paisa',['pies','olor','medias','zapatos','hongos']),
+  C('Berraco','Paisa',['valiente','enojado','verraco','fuerte','berraquera']),
 ];
-EXAMPLES.push(...EXAMPLES_PAISA);
+
+// Paquete 3: más animales, lugares de Colombia y otras categorías
+const PACK_V3 = [
+  // Animales
+  C('Perro','Animales',['ladrar','mascota','guau','hueso','cola']),
+  C('Gato','Animales',['maullar','miau','mascota','bigotes','ratón']),
+  C('León','Animales',['rey','selva','melena','rugir','felino']),
+  C('Tiburón','Animales',['mar','dientes','aleta','peligroso','pez']),
+  C('Delfín','Animales',['mar','inteligente','saltar','nadar','gris']),
+  C('Mono','Animales',['banano','árbol','colgarse','cola','selva']),
+  C('Serpiente','Animales',['veneno','arrastrarse','larga','culebra','escamas']),
+  C('Tortuga','Animales',['lenta','caparazón','mar','años','verde']),
+  C('Abeja','Animales',['miel','picar','colmena','flores','amarilla']),
+  C('Mariposa','Animales',['alas','colores','oruga','volar','flores']),
+  C('Caballo','Animales',['montar','relinchar','crin','herradura','jinete']),
+  C('Chigüiro','Animales',['capibara','roedor','Llanos','grande','agua']),
+  C('Guacamaya','Animales',['loro','plumas','colores','ave','hablar']),
+  C('Cóndor','Animales',['Andes','escudo','ave','volar','grande']),
+  C('Perezoso','Animales',['lento','dormir','árbol','colgado','oso']),
+  C('Hormiga','Animales',['pequeña','trabajadora','colonia','insecto','culona']),
+  // Lugares de Colombia
+  C('Cartagena','Colombia',['murallas','Caribe','Bolívar','colonial','castillo']),
+  C('Bogotá','Colombia',['capital','frío','Monserrate','ajiaco','rolo']),
+  C('Medellín','Colombia',['paisa','metro','eterna primavera','Antioquia','flores']),
+  C('Cali','Colombia',['salsa','Valle','caleño','bailar','feria']),
+  C('Barranquilla','Colombia',['carnaval','Caribe','costeño','Shakira','Magdalena']),
+  C('Santa Marta','Colombia',['playa','Tayrona','Caribe','Rodadero','Magdalena']),
+  C('San Andrés','Colombia',['isla','mar','siete colores','Caribe','avión']),
+  C('Caño Cristales','Colombia',['río','colores','rojo','Meta','arcoíris']),
+  C('Desierto de la Tatacoa','Colombia',['Huila','arena','estrellas','calor','seco']),
+  C('Parque Tayrona','Colombia',['Santa Marta','playa','selva','Cabo San Juan','acampar']),
+  C('Valle de Cocora','Colombia',['palmas de cera','Salento','Quindío','montañas','niebla']),
+  C('Amazonas','Colombia',['selva','río','Leticia','árboles','indígenas']),
+  C('La Guajira','Colombia',['desierto','wayuu','Cabo de la Vela','mochila','viento']),
+  C('Villa de Leyva','Colombia',['plaza','Boyacá','colonial','empedrado','cometas']),
+  C('Catedral de Sal','Colombia',['Zipaquirá','mina','iglesia','subterránea','Cundinamarca']),
+  C('Monserrate','Colombia',['Bogotá','cerro','teleférico','iglesia','subir']),
+  C('Ciudad Perdida','Colombia',['Sierra Nevada','caminata','Teyuna','tayronas','ruinas']),
+  C('Eje Cafetero','Colombia',['café','Quindío','Caldas','Risaralda','montañas']),
+  C('Los Llanos','Colombia',['llanero','joropo','sabana','ganado','Meta']),
+  C('Nevado del Ruiz','Colombia',['volcán','nieve','Armero','montaña','frío']),
+  // Comida
+  C('Ajiaco','Comida',['sopa','Bogotá','papa','pollo','guascas']),
+  C('Empanada','Comida',['frita','masa','ají','carne','rellena']),
+  C('Helado','Comida',['frío','cono','crema','sabores','derretir']),
+  C('Hamburguesa','Comida',['pan','carne','comida rápida','queso','papas']),
+  // Objetos
+  C('Celular','Objetos',['llamar','teléfono','pantalla','mensajes','batería']),
+  C('Guitarra','Objetos',['cuerdas','música','tocar','instrumento','acordes']),
+  C('Sombrero vueltiao','Objetos',['cabeza','costeño','Córdoba','blanco y negro','símbolo']),
+  C('Hamaca','Objetos',['colgar','dormir','descansar','tela','mecerse']),
+  C('Llaves','Objetos',['puerta','abrir','cerradura','casa','llavero']),
+  // Profesiones
+  C('Médico','Profesiones',['hospital','enfermo','doctor','bata','receta']),
+  C('Profesor','Profesiones',['colegio','clase','enseñar','alumnos','tablero']),
+  C('Policía','Profesiones',['ladrón','uniforme','ley','patrulla','arrestar']),
+  C('Cocinero','Profesiones',['cocina','comida','chef','restaurante','receta']),
+  C('Peluquero','Profesiones',['pelo','cortar','tijeras','peinado','salón']),
+  // Deportes
+  C('Ciclismo','Deportes',['bicicleta','Tour de Francia','pedalear','Egan','casco']),
+  C('Tenis','Deportes',['raqueta','pelota','red','cancha','Wimbledon']),
+  C('Baloncesto','Deportes',['canasta','balón','NBA','aro','encestar']),
+  C('Boxeo','Deportes',['guantes','golpes','ring','round','pelea']),
+  // Celebraciones
+  C('Navidad','Celebraciones',['diciembre','regalos','árbol','Papá Noel','pesebre']),
+  C('Halloween','Celebraciones',['disfraz','dulces','octubre','brujas','miedo']),
+  C('Boda','Celebraciones',['novios','casarse','iglesia','anillo','vestido blanco']),
+  // Lugares
+  C('Cine','Lugares',['película','pantalla','crispetas','boletas','sala']),
+  C('Supermercado','Lugares',['comprar','carrito','comida','caja','mercado']),
+  C('Parque de diversiones','Lugares',['atracciones','montaña rusa','juegos','divertido','tiquete']),
+];
+
+const EXAMPLE_PACKS = [{v:1, cards:PACK_BASE}, {v:2, cards:PACK_PAISA}, {v:3, cards:PACK_V3}];
+const EXAMPLES = EXAMPLE_PACKS.flatMap(p => p.cards);
 
 const KEYS = {cards:'tabu.cards.v1', settings:'tabu.settings.v2', examples:'tabu.examples.version'};
-const EXAMPLES_VERSION = 2;
-const TEAM_COLORS = ['#ff2e63','#2f6fdb','#00a676','#f2a000','#8b4fd1','#e2621c'];
-const TEAM_NAMES  = ['Equipo Rojo','Equipo Azul','Equipo Verde','Equipo Amarillo','Equipo Morado','Equipo Naranja'];
+const EXAMPLES_VERSION = 3;
+const TEAM_COLORS = ['#e8283a','#1f5fd6','#13965a','#8b4fd1','#e2621c','#0d8f9a'];
+const TEAM_NAMES  = ['Equipo Rojo','Equipo Azul','Equipo Verde','Equipo Morado','Equipo Naranja','Equipo Turquesa'];
 const LIMITS = {seconds:[15,300], rounds:[1,20], maxPass:[0,10], penalty:[0,3]};
 
 /* ==========================================================
@@ -596,12 +694,11 @@ if (!Array.isArray(cards)){
   store.set(KEYS.cards, cards);
 } else {
   cards = cards.map(c => sanitizeCard(c, true)).filter(Boolean);
-  // Si ya usabas la app, añade una sola vez las tarjetas paisas nuevas
-  if ((store.get(KEYS.examples, 1) || 1) < 2){
-    const have = new Set(cards.map(keyOf));
-    cards = cards.concat(EXAMPLES_PAISA.filter(c => !have.has(keyOf(c))).map(c => sanitizeCard(c)));
-    store.set(KEYS.cards, cards);
-  }
+  // Si ya usabas la app, añade una sola vez los paquetes de tarjetas nuevos
+  const seenPack = store.get(KEYS.examples, 1) || 1;
+  const have = new Set(cards.map(keyOf));
+  const nuevas = EXAMPLE_PACKS.filter(pk => pk.v > seenPack).flatMap(pk => pk.cards).filter(c => !have.has(keyOf(c)));
+  if (nuevas.length){ cards = cards.concat(nuevas.map(c => sanitizeCard(c))); store.set(KEYS.cards, cards); }
 }
 store.set(KEYS.examples, EXAMPLES_VERSION);
 
@@ -784,7 +881,7 @@ function showReady(){
   const t = game.teams[game.teamIdx];
   $('#roundLabel').textContent = `Ronda ${game.round} de ${game.rounds}`;
   $('#readyTeam').textContent = t.name;
-  $('#readyTeam').style.color = t.color;
+  $('#readyTeam').style.setProperty('--c', t.color);
   const r = roles(t);
   $('#readyDescriber').textContent = r.describer;
   $('#readyGuessers').textContent = (r.guessers.length === 1 ? 'Adivina: ' : 'Adivinan: ') + listES(r.guessers);
@@ -828,6 +925,7 @@ function nextCard(){
   const el = $('#tcard');
   el.innerHTML = `<div class="tcard-head"><span class="tcard-cat">${esc(c.category)}</span>
     <div class="tcard-word">${esc(c.word)}</div></div>
+    <div class="stripes" aria-hidden="true"></div><div class="fringe" aria-hidden="true"></div>
     <div class="tcard-label">No puedes decir:</div>
     <ul class="tcard-list">${c.forbidden.map(f => `<li>${esc(f)}</li>`).join('')}</ul>`;
   el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter');
@@ -892,7 +990,7 @@ function renderTurnEnd(){
   const pts = turnPoints();
   $('#teTitle').textContent = game.outOfCards ? 'Se acabaron las tarjetas' : '¡Tiempo!';
   $('#teTeam').textContent = t.name;
-  $('#teTeam').style.color = t.color;
+  $('#teTeam').style.setProperty('--c', t.color);
   $('#teRole').textContent = 'Describió ' + roles(t).describer;
   $('#tePoints').textContent = `${pts > 0 ? '+' : ''}${pts} ${plural(Math.abs(pts), 'punto', 'puntos')}`;
   $('#teLog').innerHTML = game.log.length
@@ -918,8 +1016,8 @@ function showFinal(){
   const top = sorted[0].score;
   const winners = sorted.filter(t => t.score === top);
   const w = $('#winner');
-  if (winners.length > 1){ w.textContent = '¡Empate!'; w.style.color = ''; }
-  else { w.textContent = '¡Gana ' + winners[0].name + '!'; w.style.color = winners[0].color; }
+  if (winners.length > 1){ w.textContent = '¡Empate!'; w.style.setProperty('--c', 'transparent'); }
+  else { w.textContent = '¡Gana ' + winners[0].name + '!'; w.style.setProperty('--c', winners[0].color); }
   $('#finalNote').textContent = game.outOfCards ? 'La partida terminó porque se acabaron las tarjetas.' : '';
   $('#finalScores').innerHTML = scoresHTML(sorted, true, -1);
   show('final');
